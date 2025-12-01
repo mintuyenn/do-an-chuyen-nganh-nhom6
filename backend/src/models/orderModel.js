@@ -24,15 +24,27 @@ const orderSchema = new mongoose.Schema(
     },
     orderCode: { type: String, unique: true },
     items: [orderItemSchema],
+
+    // Các trường giá tiền
     subtotalPrice: { type: Number, required: true },
-    appliedDiscountCode: { type: String, default: null },
+    discountCart: { type: Number, required: true, default: 0 },
     discountAmount: { type: Number, required: true, default: 0 },
     totalPrice: { type: Number, required: true },
+
+    // ✅ CẬP NHẬT: Thêm paymentMethod để tránh lỗi khi lưu
+    paymentMethod: {
+      type: String,
+      enum: ["COD", "VNPAY"],
+      default: "COD",
+    },
+
+    // ✅ CẬP NHẬT: Enum phải khớp với Controller
     paymentStatus: {
       type: String,
       enum: ["Chưa thanh toán", "Thành công", "Thất bại"],
       default: "Chưa thanh toán",
     },
+
     orderStatus: {
       type: String,
       enum: [
@@ -43,6 +55,12 @@ const orderSchema = new mongoose.Schema(
         "Đã hủy",
       ],
       default: "Chờ xác nhận",
+    },
+
+    shippingInfo: {
+      name: String,
+      phone: String,
+      address: String,
     },
   },
   { timestamps: true }

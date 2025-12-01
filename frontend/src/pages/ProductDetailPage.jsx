@@ -6,43 +6,14 @@ import {
   ChevronRight,
   Plus,
   Minus,
-  ShieldCheck,
+  Star,
   Truck,
+  ShieldCheck,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
 
 import { useCart } from "../context/CartContext";
-
-const ProductLoader = () => (
-  <div className="container mx-auto px-4 py-8 animate-pulse">
-    <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-    <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        <div>
-          <div className="h-96 md:h-[500px] bg-gray-200 rounded-lg mb-4"></div>
-          <div className="flex gap-2">
-            <div className="w-20 h-20 bg-gray-200 rounded-lg"></div>
-            <div className="w-20 h-20 bg-gray-200 rounded-lg"></div>
-            <div className="w-20 h-20 bg-gray-200 rounded-lg"></div>
-          </div>
-        </div>
-        <div>
-          <div className="h-10 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/2 mb-6"></div>
-          <div className="h-12 bg-gray-200 rounded w-1/3 mb-6"></div>
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-2"></div>
-          <div className="flex gap-2 mb-6">
-            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-          </div>
-          <div className="h-12 bg-gray-200 rounded-lg w-full mb-3"></div>
-          <div className="h-12 bg-gray-200 rounded-lg w-full"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -50,6 +21,7 @@ const ProductDetailPage = () => {
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
+  const [sold, setSold] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -58,11 +30,12 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [toast, setToast] = useState(null);
 
-  // === Fetch Product ===
+  // === Fetch Product + Sold ===
   useEffect(() => {
     const getProduct = async () => {
       try {
         setLoading(true);
+        // Product
         const res = await axios.get(`http://localhost:5001/api/products/${id}`);
         const p = res.data;
         setProduct(p);
@@ -75,6 +48,12 @@ const ProductDetailPage = () => {
         setSelectedSize(firstSize);
 
         setSelectedImage(v?.images?.[0] || p.images?.[0] || "/placeholder.png");
+
+        // Sold
+        const soldRes = await axios.get(
+          `http://localhost:5001/api/orders/sold/${id}`
+        );
+        setSold(soldRes.data.sold ?? 0);
       } catch (err) {
         console.error(err);
         setError("Không thể tải sản phẩm.");
@@ -115,19 +94,26 @@ const ProductDetailPage = () => {
     setTimeout(() => setToast(null), 2000);
   };
 
+  const isLoggedIn = () => {
+    const token = localStorage.getItem("token");
+    return !!token;
+  };
+
   const handleAddToCart = async () => {
+    if (!isLoggedIn()) {
+      showToast("Bạn cần đăng nhập để thêm vào giỏ!", "error");
+      navigate("/login");
+      return;
+    }
     const variant = selectedVariant ?? null;
     const sizeObj = selectedSize ?? null;
 
-    // Xác định stock: ưu tiên size → variant → product
     const stock = sizeObj?.stock ?? variant?.stock ?? product.stock ?? 0;
-
     if (stock <= 0) {
       showToast("Sản phẩm đã hết hàng!", "error");
       return;
     }
 
-    // Kiểm tra số lượng trong giỏ
     const cartData = JSON.parse(localStorage.getItem("cart")) || [];
     const existingItem = cartData.find(
       (item) =>
@@ -136,28 +122,21 @@ const ProductDetailPage = () => {
         (sizeObj ? item.size === sizeObj.size : true)
     );
     const currentQty = existingItem ? existingItem.quantity : 0;
-
     if (currentQty + quantity > stock) {
       showToast(`Chỉ còn ${stock} sản phẩm!`, "error");
       return;
     }
 
-    try {
-      await addToCart({
-        productId: product._id,
-        color: variant?.color ?? null,
-        size: sizeObj?.size ?? null,
-        image: selectedImage,
-        quantity,
-        price: product.price,
-        salePrice: product.finalPrice ?? product.price,
-      });
-
-      showToast(`Sản phẩm đã thêm vào giỏ`, "success");
-    } catch (err) {
-      console.error(err);
-      showToast("Thêm vào giỏ hàng thất bại. Vui lòng thử lại.", "error");
-    }
+    await addToCart({
+      productId: product._id,
+      color: variant?.color ?? null,
+      size: sizeObj?.size ?? null,
+      image: selectedImage,
+      quantity,
+      price: product.price,
+      salePrice: product.finalPrice ?? product.price,
+    });
+    showToast(`Sản phẩm đã thêm vào giỏ`, "success");
   };
 
   const handleBuyNow = async () => {
@@ -165,33 +144,21 @@ const ProductDetailPage = () => {
     navigate("/cart");
   };
 
-  if (loading) return <ProductLoader />;
+  if (loading)
+    return <div className="animate-pulse text-center py-20">Đang tải...</div>;
   if (error)
     return <div className="text-center text-red-500 mt-20">{error}</div>;
   if (!product)
     return <div className="text-center mt-20">Không có sản phẩm.</div>;
 
-  const price = product?.price ?? 0;
-  const discountInfo = product?.discountInfo;
-  const discountedPrice =
-    product?.finalPrice ??
-    (discountInfo?.type === "percent"
-      ? price * (1 - discountInfo.value / 100)
-      : discountInfo?.type === "fixed"
-      ? price - discountInfo.value
-      : price);
-  const originalPrice = price;
+  const discountedPrice = product.finalPrice ?? product.price;
+  const originalPrice = product.price;
   const stock =
-    selectedSize?.stock ?? // ưu tiên size trong variant
-    selectedVariant?.stock ?? // nếu variant không có size
-    product.stock ??
-    0; // fallback product.stock
-
+    selectedSize?.stock ?? selectedVariant?.stock ?? product.stock ?? 0;
   const canAdd = stock > 0;
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
-      {/* Toast */}
       {toast && (
         <div
           className={`fixed top-5 right-5 px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-white z-50 animate-slide`}
@@ -247,16 +214,37 @@ const ProductDetailPage = () => {
           <div>
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
 
-            {discountInfo && (
-              <div className="inline-block bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">
-                {discountInfo.type === "percent"
-                  ? `-${discountInfo.value}%`
-                  : discountInfo.type === "fixed"
-                  ? `-${discountInfo.value.toLocaleString("vi-VN")}đ`
-                  : discountInfo.name}
+            {/* ⭐ Rating + Reviews + Sold */}
+            {product.averageRating > 0 && (
+              <div className="flex items-center gap-2 mb-4">
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const diff = product.averageRating - i;
+                  let starClass = "text-gray-300";
+                  if (diff >= 1) starClass = "text-yellow-400";
+                  else if (diff > 0) starClass = "text-yellow-400/50";
+                  return <Star key={i} size={16} className={starClass} />;
+                })}
+                <span className="text-gray-500 text-sm">
+                  {product.averageRating.toFixed(1)}/5
+                </span>
+                <span className="text-gray-400 text-sm">
+                  ({product.numReviews ?? 0} đánh giá)
+                </span>
+                <span className="text-gray-400 text-sm">• Đã bán {sold}</span>
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("reviews-section")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="text-red-600 text-sm ml-2 underline"
+                >
+                  Xem đánh giá
+                </button>
               </div>
             )}
 
+            {/* Price */}
             <div className="mb-4">
               <span className="text-3xl font-bold text-red-600">
                 {discountedPrice.toLocaleString("vi-VN")}đ
@@ -319,28 +307,25 @@ const ProductDetailPage = () => {
             )}
 
             {/* Quantity */}
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold mb-1">Số lượng</h3>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => handleQuantityChange(-1)}
-                  disabled={quantity <= 1}
-                  className="px-3 py-2 border rounded disabled:opacity-40"
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="px-4 py-2 border">{quantity}</span>
-                <button
-                  onClick={() => handleQuantityChange(1)}
-                  disabled={quantity >= stock}
-                  className="px-3 py-2 border rounded disabled:opacity-40"
-                >
-                  <Plus size={16} />
-                </button>
-                <span className="text-sm text-gray-500">
-                  {stock > 0 ? `${stock} sản phẩm còn trong kho` : "Hết hàng"}
-                </span>
-              </div>
+            <div className="mb-4 flex items-center gap-3">
+              <button
+                onClick={() => handleQuantityChange(-1)}
+                disabled={quantity <= 1}
+                className="px-3 py-2 border rounded disabled:opacity-40"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="px-4 py-2 border">{quantity}</span>
+              <button
+                onClick={() => handleQuantityChange(1)}
+                disabled={quantity >= stock}
+                className="px-3 py-2 border rounded disabled:opacity-40"
+              >
+                <Plus size={16} />
+              </button>
+              <span className="text-sm text-gray-500">
+                {stock > 0 ? `${stock} sản phẩm còn trong kho` : "Hết hàng"}
+              </span>
             </div>
 
             {/* Buttons */}
@@ -379,23 +364,69 @@ const ProductDetailPage = () => {
           </h2>
           <p className="whitespace-pre-line text-gray-700 leading-relaxed mb-6">
             {product.description || "Chưa có mô tả."}
+            {"\n\n"}• Chất liệu cotton 100%, mềm mại, thoáng mát{"\n"}• Thấm hút
+            mồ hôi tốt, phù hợp cho mọi hoạt động{"\n"}• Thiết kế hiện đại, trẻ
+            trung, phù hợp nhiều hoàn cảnh{"\n"}• Màu sắc đa dạng, dễ phối đồ
+            {"\n"}• Dễ giặt, ít bị nhăn và co rút{"\n"}• Các size từ S đến XL,
+            phù hợp nhiều vóc dáng{"\n"}• Phù hợp làm quà tặng hoặc mặc hàng
+            ngày
           </p>
+        </div>
 
-          <div className="space-y-3 text-gray-700">
-            {[
-              "Sợi vải cao cấp, bền và mềm mại, giữ form chuẩn",
-              "Công nghệ dệt thoáng khí, thoải mái cả ngày dài",
-              "Đường may tỉ mỉ – hoàn thiện sắc nét từng chi tiết",
-              "Thiết kế tinh gọn, sang trọng – dễ phối với đa dạng outfit",
-              "Chống nhăn tốt, giữ phom lịch lãm suốt ngày dài",
-              "Lựa chọn tối ưu cho đi làm, dự tiệc hoặc gặp gỡ đối tác",
-            ].map((text, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-lg">🧵</span>
-                <span className="leading-relaxed">{text}</span>
-              </div>
-            ))}
-          </div>
+        {/* Reviews Section */}
+        <div
+          id="reviews-section"
+          className="bg-white rounded-xl shadow p-6 mt-8"
+        >
+          <h2 className="text-xl font-bold mb-6 tracking-wide uppercase text-gray-800">
+            Đánh giá sản phẩm
+          </h2>
+
+          {product.reviews?.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {product.reviews.map((r) => (
+                <div
+                  key={r._id}
+                  className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      {/* Avatar giả lập chữ cái đầu */}
+                      <div className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-bold">
+                        {r.userId.fullName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {r.userId.fullName}
+                        </p>
+                        <div className="flex items-center mt-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              size={16}
+                              className={
+                                i < r.rating
+                                  ? "text-yellow-400"
+                                  : "text-gray-300"
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-gray-400 text-sm">
+                      {new Date(r.createdAt).toLocaleDateString("vi-VN")}
+                    </span>
+                  </div>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    {r.comment}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">Chưa có đánh giá nào.</p>
+          )}
         </div>
       </div>
     </div>

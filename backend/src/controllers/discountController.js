@@ -1,17 +1,4 @@
 import Discount from "../models/discountModel.js";
-import User from "../models/userModel.js";
-
-/** 🟢 Tạo giảm giá mới (Admin) */
-export const createDiscount = async (req, res) => {
-  try {
-    const discount = await Discount.create(req.body);
-    res
-      .status(201)
-      .json({ success: true, message: "Tạo giảm giá thành công!", discount });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
 
 /** 🟡 Lấy tất cả giảm giá */
 export const getAllDiscounts = async (req, res) => {
@@ -23,224 +10,103 @@ export const getAllDiscounts = async (req, res) => {
   }
 };
 
-/** 🔵 Lấy chi tiết giảm giá theo ID */
-export const getDiscountById = async (req, res) => {
-  try {
-    const discount = await Discount.findById(req.params.id).populate(
-      "applicableProducts"
-    );
-    if (!discount)
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy giảm giá" });
-    res.json({ success: true, data: discount });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-/** 🟠 Cập nhật giảm giá */
-export const updateDiscount = async (req, res) => {
-  try {
-    const discount = await Discount.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!discount)
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy giảm giá" });
-    res.json({ success: true, message: "Cập nhật thành công", discount });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-/** 🔴 Xóa giảm giá */
-export const deleteDiscount = async (req, res) => {
-  try {
-    const discount = await Discount.findByIdAndDelete(req.params.id);
-    if (!discount)
-      return res
-        .status(404)
-        .json({ success: false, message: "Không tìm thấy giảm giá" });
-    res.json({ success: true, message: "Đã xóa giảm giá" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-/** 🟢 Lấy tất cả giảm giá còn hiệu lực */
+/** 🟢 Lấy các mã đang hoạt động */
 export const getActiveDiscounts = async (req, res) => {
   try {
+    const now = new Date();
     const discounts = await Discount.find({
       isActive: true,
-      $or: [{ endDate: { $exists: false } }, { endDate: { $gte: new Date() } }],
-    }).populate("applicableProducts");
-
+      startDate: { $lte: now },
+      $or: [{ endDate: { $exists: false } }, { endDate: { $gte: now } }],
+    });
     res.json({ success: true, data: discounts });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-/** 🔹 Áp dụng giảm giá cho Home / Product List (percent & holiday) */
-export const applyDiscountsForHome = (products, discounts) => {
-  const validDiscounts = discounts.filter(
-    (d) =>
-      d.isActive &&
-      (!d.startDate || new Date() >= d.startDate) &&
-      (!d.endDate || new Date() <= d.endDate) &&
-      ["percent", "holiday"].includes(d.discountType)
-  );
-
-  return products.map((product) => {
-    let discountedPrice = product.price;
-    let appliedDiscount = null;
-
-    validDiscounts.forEach((discount) => {
-      // Kiểm tra nếu discount áp dụng cho sản phẩm cụ thể
-      if (
-        discount.applicableProducts.length > 0 &&
-        !discount.applicableProducts.some(
-          (id) => id.toString() === product._id.toString()
-        )
-      )
-        return;
-
-      let tempPrice = product.price;
-
-      if (discount.discountType === "percent") {
-        tempPrice = Math.max(
-          0,
-          product.price - (product.price * discount.discountValue) / 100
-        );
-      } else if (discount.discountType === "holiday") {
-        tempPrice = Math.max(0, product.price - discount.discountValue);
-      }
-
-      if (tempPrice < discountedPrice) {
-        discountedPrice = tempPrice;
-        appliedDiscount = discount;
-      }
-    });
-
-    return {
-      ...product,
-      finalPrice: Math.round(discountedPrice),
-      discountInfo: appliedDiscount
-        ? {
-            name: appliedDiscount.name,
-            value: appliedDiscount.discountValue,
-            type: appliedDiscount.discountType,
-          }
-        : null,
-    };
-  });
-};
-
-/** 🔹 Handler cho route /apply-home */
-export const applyDiscountsHomeHandler = (req, res) => {
+/** 🔵 Lấy chi tiết giảm giá theo ID */
+export const getDiscountById = async (req, res) => {
   try {
-    const { products, discounts } = req.body;
-
-    if (!products || !Array.isArray(products) || products.length === 0)
+    const discount = await Discount.findById(req.params.id);
+    if (!discount)
       return res
-        .status(400)
-        .json({ success: false, message: "Thiếu products hoặc products rỗng" });
-
-    if (!discounts || !Array.isArray(discounts))
-      return res
-        .status(400)
-        .json({ success: false, message: "Thiếu discounts hoặc không hợp lệ" });
-
-    const updatedProducts = applyDiscountsForHome(products, discounts);
-    res.json({ success: true, data: updatedProducts });
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy" });
+    res.json({ success: true, data: discount });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-/** 🔹 Áp dụng giảm giá cho Checkout (all loại, chọn cao nhất) */
-export const applyDiscountsForCheckout = async (req, res) => {
+/** ✅ KIỂM TRA MÃ GIẢM GIÁ (Chỉ còn holiday + percent) */
+export const validateDiscount = async (req, res) => {
   try {
-    const { products, totalAmount, quantity } = req.body;
+    const { code, subtotal } = req.body;
 
-    if (!products || totalAmount === undefined || quantity === undefined) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Thiếu dữ liệu: products, totalAmount hoặc quantity",
-        });
-    }
-
-    const now = new Date();
-
-    const discounts = await Discount.find({
+    // 1. Tìm mã giảm giá hợp lệ
+    const discount = await Discount.findOne({
+      code,
       isActive: true,
-      startDate: { $lte: now },
-      $or: [{ endDate: { $exists: false } }, { endDate: { $gte: now } }],
+      startDate: { $lte: new Date() },
+      $or: [{ endDate: { $exists: false } }, { endDate: { $gte: new Date() } }],
     });
 
-    let bestDiscount = null;
-    let maxDiscountAmount = 0;
-
-    for (const d of discounts) {
-      let discountAmount = 0;
-
-      switch (d.discountType) {
-        case "fixed":
-          discountAmount = d.discountValue;
-          break;
-        case "quantity":
-          if (quantity >= d.minQuantity)
-            discountAmount = (totalAmount * d.discountValue) / 100;
-          break;
-        case "percent":
-          discountAmount = (totalAmount * d.discountValue) / 100;
-          break;
-        case "holiday":
-          discountAmount = d.discountValue;
-          break;
-      }
-
-      // Kiểm tra nếu discount áp dụng cho sản phẩm cụ thể
-      if (
-        d.applicableProducts.length > 0 &&
-        !products.some((p) =>
-          d.applicableProducts.some((id) => id.toString() === p._id.toString())
-        )
-      ) {
-        discountAmount = 0; // không áp dụng
-      }
-
-      if (!bestDiscount || discountAmount > maxDiscountAmount) {
-        bestDiscount = d;
-        maxDiscountAmount = discountAmount;
-      }
-    }
-
-    const finalPrice = Math.max(totalAmount - maxDiscountAmount, 0);
-
-    if (bestDiscount) {
-      res.json({
-        success: true,
-        message: `Áp dụng giảm giá: ${bestDiscount.name}`,
-        discountApplied: bestDiscount,
-        discountAmount: maxDiscountAmount,
-        finalPrice,
-      });
-    } else {
-      res.json({
+    if (!discount) {
+      return res.status(400).json({
         success: false,
-        message: "Không có giảm giá phù hợp",
-        discountAmount: 0,
-        finalPrice: totalAmount,
+        message: "Mã giảm giá không hợp lệ hoặc đã hết hạn",
       });
     }
+
+    // 2. Tính toán giảm giá
+    let discountAmount = 0;
+
+    if (discount.discountType === "holiday") {
+      // Giảm theo giá trị cố định (holiday)
+      discountAmount = discount.discountValue;
+    }
+
+    if (discount.discountType === "percent") {
+      // Giảm theo % tổng hóa đơn
+      discountAmount = Math.round((subtotal * discount.discountValue) / 100);
+    }
+
+    // Không cho giảm quá tổng tiền
+    discountAmount = Math.min(discountAmount, subtotal);
+
+    return res.status(200).json({
+      success: true,
+      message: "Áp dụng mã thành công!",
+      discountAmount,
+      code: discount.code,
+      type: discount.discountType,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi server khi kiểm tra mã" });
+  }
+};
+/** 🟣 Lấy 3 mã giảm giá holiday mới nhất */
+export const getLatestHolidayDiscounts = async (req, res) => {
+  try {
+    const discounts = await Discount.find({
+      discountType: "holiday",
+    })
+      .sort({ createdAt: -1 }) // Mới nhất trước
+      .limit(3); // Lấy 3 mã
+
+    return res.json({
+      success: true,
+      data: discounts,
+    });
+  } catch (error) {
+    console.error("Lỗi lấy mã giảm giá holiday mới nhất:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy mã giảm giá holiday",
+    });
   }
 };

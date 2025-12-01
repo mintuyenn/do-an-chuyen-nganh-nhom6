@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  ShoppingCart,
-  Eye,
-  Heart,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+import { ShoppingCart, CheckCircle, AlertCircle, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
@@ -80,30 +74,15 @@ const ProductCard = ({ product, activeVariant = null }) => {
               : discountInfo.name}
           </div>
         )}
-
-        <div className="relative overflow-hidden rounded-xl">
+        <div
+          className="relative overflow-hidden rounded-xl cursor-pointer"
+          onClick={() => navigate(`/product/${product._id}`)}
+        >
           <img
             src={selectedImage}
             alt={product.name}
             className="w-full h-52 object-cover transition-transform duration-500 group-hover:scale-105"
           />
-
-          <div className="absolute top-2 right-2 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button
-              title="Xem chi tiết"
-              onClick={() => navigate(`/product/${product._id}`)}
-              className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
-            >
-              <Eye className="h-4 w-4 text-gray-600" />
-            </button>
-            <button
-              title="Thêm vào yêu thích"
-              onClick={() => navigate("/wishlist")}
-              className="bg-white p-2 rounded-full shadow hover:bg-red-100 transition"
-            >
-              <Heart className="h-4 w-4 text-red-500" />
-            </button>
-          </div>
         </div>
 
         {selectedVariant?.images?.length > 1 && (
@@ -132,6 +111,23 @@ const ProductCard = ({ product, activeVariant = null }) => {
           {product.name}{" "}
           {selectedVariant?.color && `- ${selectedVariant.color}`}
         </h3>
+        {product.averageRating > 0 && (
+          <div className="flex items-center gap-1 mb-2">
+            {Array.from({ length: 5 }).map((_, i) => {
+              const rating = product.averageRating;
+              const diff = rating - i;
+
+              let starClass = "text-gray-300"; // sao trống
+              if (diff >= 1) starClass = "text-yellow-400"; // sao đầy
+              else if (diff > 0) starClass = "text-yellow-400/50"; // sao nửa
+
+              return <Star key={i} size={16} className={starClass} />;
+            })}
+            <span className="text-gray-500 text-xs ml-1">
+              {product.averageRating.toFixed(1)}/5
+            </span>
+          </div>
+        )}
 
         {discountedPrice < product.price ? (
           <div className="mb-2">

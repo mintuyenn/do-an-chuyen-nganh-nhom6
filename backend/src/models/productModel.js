@@ -22,6 +22,8 @@ const productSchema = new mongoose.Schema({
       images: [String],
     },
   ],
+  averageRating: { type: Number, default: 0 }, // số sao trung bình
+  numReviews: { type: Number, default: 0 }, // số lượng review
 });
 
 const Product = mongoose.model("Product", productSchema);

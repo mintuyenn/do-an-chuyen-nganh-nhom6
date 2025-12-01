@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -9,5 +9,25 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <script src="https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/1.2.0-beta.6/libs/oversea/index.js"></script>
+    <script>
+      new CozeWebSDK.WebChatClient({
+        config: {
+          bot_id: "7578060301766098997",
+        },
+        componentProps: {
+          title: "Coze",
+        },
+        auth: {
+          type: "token",
+          token:
+            "pat_GDbMxXmlz6D4o32zy3bNed4fQu2uoiPxXbuDlGB8KDQb32pYMph2l6Yj8Eybq53n",
+          onRefreshToken: function () {
+            return "pat_GDbMxXmlz6D4o32zy3bNed4fQu2uoiPxXbuDlGB8KDQb32pYMph2l6Yj8Eybq53n";
+          },
+        },
+      });
+    </script>
   </body>
 </html>

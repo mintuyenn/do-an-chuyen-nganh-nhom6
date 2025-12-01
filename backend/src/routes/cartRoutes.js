@@ -5,19 +5,16 @@ import {
   updateCart,
   removeFromCart,
   clearCart,
-  applyDiscountCode,
 } from "../controllers/cartController.js";
 
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, onlyCustomer } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 // User phải login mới dùng cart
-router.get("/", protect, getCart);
-router.post("/add", protect, addToCart);
-router.put("/update", protect, updateCart);
-router.delete("/remove", protect, removeFromCart);
-router.delete("/clear", protect, clearCart);
-router.post("/apply-discount", protect, applyDiscountCode);
-
+router.get("/", protect, onlyCustomer, getCart);
+router.post("/add", protect, onlyCustomer, addToCart);
+router.put("/update", protect, onlyCustomer, updateCart);
+router.delete("/remove", protect, onlyCustomer, removeFromCart);
+router.delete("/clear", protect, onlyCustomer, clearCart);
 export default router;

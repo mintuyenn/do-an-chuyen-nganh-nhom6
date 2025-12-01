@@ -25,7 +25,6 @@ const cartSchema = new mongoose.Schema(
     },
     items: [cartItemSchema],
     subtotalPrice: { type: Number, default: 0 },
-    appliedDiscountCode: { type: String, default: null },
     discountAmount: { type: Number, default: 0 },
     totalPrice: { type: Number, default: 0 },
   },

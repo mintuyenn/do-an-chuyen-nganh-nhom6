@@ -6,6 +6,7 @@ import {
   updateCategory,
   deleteCategory,
 } from "../controllers/categoryController.js";
+import { onlyCustomer } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 

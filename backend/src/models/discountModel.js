@@ -11,7 +11,7 @@ const discountSchema = new mongoose.Schema(
     code: {
       type: String,
       unique: true,
-      sparse: true, // tránh lỗi unique với giá trị null
+      sparse: true,
       trim: true,
     }, // Mã voucher (nếu có)
 
@@ -31,12 +31,6 @@ const discountSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     }, // Mức độ ưu tiên (số càng cao -> ưu tiên càng cao)
-
-    minQuantity: {
-      type: Number,
-      default: 0,
-      min: 0,
-    }, // Dùng cho giảm giá theo số lượng
 
     startDate: {
       type: Date,

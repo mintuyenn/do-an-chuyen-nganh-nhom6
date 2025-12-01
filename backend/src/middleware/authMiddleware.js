@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
+// ✅ Middleware xác thực
 export const protect = async (req, res, next) => {
   let token;
   if (
@@ -28,11 +29,22 @@ export const protect = async (req, res, next) => {
   }
 };
 
-export const authorize = (roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
+export const onlyCustomer = (req, res, next) => {
+  if (req.user.role !== "user") {
+    return res.status(403).json({
+      message: "Chỉ khách hàng mới được phép thực hiện hành động này",
+    });
+  }
+  next();
+};
+
+//Middleware Admin (Để sửa lỗi import { admin })
+export const admin = (req, res, next) => {
+  // Kiểm tra xem user có phải admin không
+  // (Logic này tùy thuộc vào User Model của bạn dùng field 'isAdmin' hay role='admin')
+  if (req.user && (req.user.isAdmin || req.user.role === "admin")) {
     next();
-  };
+  } else {
+    res.status(401).json({ message: "Không được phép, yêu cầu quyền Admin" });
+  }
 };

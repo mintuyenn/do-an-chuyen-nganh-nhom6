@@ -1,6 +1,8 @@
 import Product from "../models/productModel.js";
 import Category from "../models/categogyModel.js";
 import Discount from "../models/discountModel.js";
+import Order from "../models/orderModel.js"; // để tính sold
+import Review from "../models/reviewModel.js"; // thêm import
 
 /* ---------------------- HÀM PHỤ TRỢ ---------------------- */
 
@@ -15,15 +17,17 @@ const getAllChildCategoryIds = async (parentId) => {
   return ids;
 };
 
-// 🔹 Áp dụng giảm giá cho Home / Product list (percent + holiday)
+// 🔹 Áp dụng giảm giá cho Home / Product list (CHỈ percent)
 const applyDiscountsForHome = (products, discounts) => {
-  const validDiscounts = discounts.filter(
-    (d) =>
-      d.isActive &&
-      (!d.startDate || new Date() >= d.startDate) &&
-      (!d.endDate || new Date() <= d.endDate) &&
-      ["percent", "holiday"].includes(d.discountType)
-  );
+  const validDiscounts = discounts
+    .filter(
+      (d) =>
+        d.isActive &&
+        (!d.startDate || new Date() >= d.startDate) &&
+        (!d.endDate || new Date() <= d.endDate) &&
+        d.discountType === "percent"
+    )
+    .sort((a, b) => a.priority - b.priority); // ưu tiên thấp trước
 
   return products.map((product) => {
     let originalPrice = product.price;
@@ -31,7 +35,7 @@ const applyDiscountsForHome = (products, discounts) => {
     let appliedDiscount = null;
 
     for (const discount of validDiscounts) {
-      // Kiểm tra áp dụng cho sản phẩm cụ thể
+      // Nếu discount áp dụng sản phẩm cụ thể
       if (
         discount.applicableProducts.length > 0 &&
         !discount.applicableProducts.some(
@@ -40,13 +44,8 @@ const applyDiscountsForHome = (products, discounts) => {
       )
         continue;
 
-      let tempPrice = originalPrice;
-      if (discount.discountType === "percent") {
-        tempPrice =
-          originalPrice - (originalPrice * discount.discountValue) / 100;
-      } else if (discount.discountType === "holiday") {
-        tempPrice = Math.max(0, originalPrice - discount.discountValue);
-      }
+      const tempPrice =
+        originalPrice - (originalPrice * discount.discountValue) / 100;
 
       if (tempPrice < bestFinalPrice) {
         bestFinalPrice = tempPrice;
@@ -62,23 +61,27 @@ const applyDiscountsForHome = (products, discounts) => {
             name: appliedDiscount.name,
             value: appliedDiscount.discountValue,
             type: appliedDiscount.discountType,
+            priority: appliedDiscount.priority,
           }
         : null,
     };
   });
 };
 
-// 🔹 Áp dụng giảm giá khi Checkout (all loại, chọn cao nhất)
+// 🔹 Áp dụng giảm giá khi Checkout
 const applyDiscountsForCheckout = (products, discounts) => {
+  // sắp xếp giảm giá theo priority tăng dần
+  const sorted = discounts.sort((a, b) => a.priority - b.priority);
+
   return products.map((product) => {
     const originalPrice = product.price;
     let bestFinalPrice = originalPrice;
     let appliedDiscount = null;
 
-    for (const discount of discounts) {
-      if (!discount.isActive || discount.isExpired) continue;
+    for (const discount of sorted) {
+      if (!discount.isActive) continue;
 
-      // Kiểm tra áp dụng cho sản phẩm cụ thể
+      // Kiểm tra áp dụng sản phẩm
       if (
         discount.applicableProducts.length > 0 &&
         !discount.applicableProducts.some(
@@ -89,24 +92,13 @@ const applyDiscountsForCheckout = (products, discounts) => {
 
       let tempPrice = originalPrice;
 
-      switch (discount.discountType) {
-        case "percent":
-          tempPrice =
-            originalPrice - (originalPrice * discount.discountValue) / 100;
-          break;
-        case "fixed":
-          tempPrice = Math.max(0, originalPrice - discount.discountValue);
-          break;
-        case "quantity":
-          if (product.quantity && product.quantity >= discount.minQuantity)
-            tempPrice =
-              originalPrice - (originalPrice * discount.discountValue) / 100;
-          break;
-        case "holiday":
-          tempPrice = Math.max(0, originalPrice - discount.discountValue);
-          break;
-        default:
-          break;
+      if (discount.discountType === "holiday") {
+        tempPrice = Math.max(0, originalPrice - discount.discountValue);
+      }
+
+      if (discount.discountType === "percent") {
+        tempPrice =
+          originalPrice - (originalPrice * discount.discountValue) / 100;
       }
 
       if (tempPrice < bestFinalPrice) {
@@ -116,13 +108,14 @@ const applyDiscountsForCheckout = (products, discounts) => {
     }
 
     return {
-      ...product.toObject(),
+      ...product,
       finalPrice: Math.round(bestFinalPrice),
       discountInfo: appliedDiscount
         ? {
             name: appliedDiscount.name,
             value: appliedDiscount.discountValue,
             type: appliedDiscount.discountType,
+            priority: appliedDiscount.priority,
           }
         : null,
     };
@@ -210,28 +203,56 @@ export const getProducts = async (req, res) => {
   }
 };
 
-// ✅ Lấy chi tiết sản phẩm
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
       "categoryId"
     );
     if (!product)
-      return res.status(404).json({ error: "Sản phẩm không tồn tại" });
+      return res.status(404).json({ error: "Product không tồn tại" });
 
+    // Lấy tất cả review cho product
+    const reviews = await Review.find({ productId: product._id }).populate(
+      "userId",
+      "fullName"
+    );
+
+    // Tính số lượng và trung bình
+    const numReviews = reviews.length;
+    const averageRating =
+      numReviews > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / numReviews
+        : 0;
+
+    // Lấy số đã bán từ Order
+    const result = await Order.aggregate([
+      { $match: { orderStatus: "Đã hoàn thành" } },
+      { $unwind: "$items" },
+      { $match: { "items.productId": product._id } },
+      { $group: { _id: null, sold: { $sum: "$items.quantity" } } },
+    ]);
+    const sold = result.length > 0 ? result[0].sold : 0;
+
+    // Áp dụng giảm giá
     const activeDiscounts = await Discount.find({
       isActive: true,
       startDate: { $lte: new Date() },
       $or: [{ endDate: { $exists: false } }, { endDate: { $gte: new Date() } }],
     });
+    const [updatedProduct] = applyDiscountsForHome([product], activeDiscounts);
 
-    const [updated] = applyDiscountsForHome([product], activeDiscounts);
-    res.json(updated);
+    res.json({
+      ...updatedProduct,
+      averageRating,
+      numReviews,
+      sold,
+      reviews,
+    });
   } catch (err) {
+    console.error("getProductById error:", err);
     res.status(500).json({ error: err.message });
   }
 };
-
 // ✅ Lấy sản phẩm mới nhất
 export const getLatestProducts = async (req, res) => {
   try {
@@ -276,72 +297,6 @@ export const checkoutProducts = async (req, res) => {
       data: updatedProducts,
       totalAmount,
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-// ✅ Tạo sản phẩm mới
-export const createProduct = async (req, res) => {
-  try {
-    const {
-      name,
-      categoryId,
-      price,
-      description,
-      images,
-      variants,
-      discountId,
-    } = req.body;
-
-    const product = new Product({
-      name,
-      categoryId,
-      price,
-      description,
-      images,
-      variants,
-      discountId: discountId || null,
-    });
-
-    await product.save();
-    res.status(201).json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// ✅ Cập nhật sản phẩm
-export const updateProduct = async (req, res) => {
-  try {
-    const {
-      name,
-      categoryId,
-      price,
-      description,
-      images,
-      variants,
-      discountId,
-    } = req.body;
-
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { name, categoryId, price, description, images, variants, discountId },
-      { new: true }
-    ).populate("discountId");
-
-    if (!product) return res.status(404).json({ error: "Product not found" });
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// ✅ Xóa sản phẩm
-export const deleteProduct = async (req, res) => {
-  try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-    if (!product) return res.status(404).json({ error: "Product not found" });
-    res.json({ message: "Product deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

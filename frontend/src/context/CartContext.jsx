@@ -37,6 +37,7 @@ export const CartProvider = ({ children }) => {
       updateCartCount(res.data.items || []);
       setTotals({
         subtotalPrice: res.data.subtotalPrice,
+        discountAmount: res.data.discountAmount,
         totalPrice: res.data.totalPrice,
       });
     } catch (err) {
