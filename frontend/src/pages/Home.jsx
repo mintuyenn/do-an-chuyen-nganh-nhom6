@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import * as Motion from "framer-motion";
-import { ShoppingBag, Eye, ArrowRight } from "lucide-react"; // Gợi ý: Cài thêm lucide-react nếu chưa có, hoặc dùng icon text
+import { ShoppingBag, Eye, ArrowRight } from "lucide-react";
 
 import ProductCard from "../components/ProductCard";
 import Banner from "../components/Banner";
@@ -29,41 +29,71 @@ const Home = () => {
 
   const [selectedPrice, setSelectedPrice] = useState("TẤT CẢ");
   const [selectedColor, setSelectedColor] = useState("TẤT CẢ");
-  const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
-  // --- LOGIC GIỮ NGUYÊN ---
+  // ✅ Fix URL: Đảm bảo không bị double slash
+  const BASE_URL = import.meta.env.VITE_API_URL || "";
+  const API_URL = `${BASE_URL.replace(/\/$/, "")}/api`;
+
+  // --- 1. FETCH LATEST PRODUCTS (ĐÃ SỬA CHỐNG LỖI) ---
   useEffect(() => {
     const fetchLatestProducts = async () => {
       try {
         const res = await axios.get(`${API_URL}/products/latest`);
-        setLatestProducts(res.data || []);
+        console.log("🔥 Latest Products Response:", res.data); // Check log F12
+
+        // ✅ LOGIC AN TOÀN: Kiểm tra xem data trả về là mảng trực tiếp hay nằm trong thuộc tính khác
+        let data = [];
+        if (Array.isArray(res.data)) {
+          data = res.data;
+        } else if (res.data && Array.isArray(res.data.products)) {
+          data = res.data.products;
+        } else if (res.data && Array.isArray(res.data.data)) {
+          data = res.data.data;
+        }
+
+        setLatestProducts(data);
       } catch (err) {
-        console.error("Lỗi khi tải sản phẩm mới:", err);
+        console.error("❌ Lỗi khi tải sản phẩm mới:", err);
         setLatestProducts([]);
       } finally {
         setLoadingHot(false);
       }
     };
     fetchLatestProducts();
-  }, []);
+  }, [API_URL]);
 
+  // --- 2. FETCH ALL PRODUCTS (ĐÃ SỬA CHỐNG LỖI) ---
   const fetchProducts = async () => {
     setLoadingAll(true);
     try {
       const res = await axios.get(`${API_URL}/products`, {
         params: { page, limit, minPrice, maxPrice, color, sort },
       });
-      const data = res.data.data || [];
-      setTotalPages(res.data.totalPages || 1);
+      console.log("🛒 All Products Response:", res.data); // Check log F12
+
+      // ✅ LOGIC AN TOÀN TƯƠNG TỰ
+      let data = [];
+      if (res.data && Array.isArray(res.data.data)) {
+        data = res.data.data; // Trường hợp có phân trang chuẩn
+      } else if (Array.isArray(res.data)) {
+        data = res.data;
+      } else if (res.data && Array.isArray(res.data.products)) {
+        data = res.data.products;
+      }
+
+      setTotalPages(res.data?.totalPages || 1);
       setProducts(data);
 
+      // Lấy danh sách màu để filter
       const allColors = new Set();
       data.forEach((p) => {
-        if (p.variants) p.variants.forEach((v) => allColors.add(v.color));
+        if (p.variants && Array.isArray(p.variants)) {
+          p.variants.forEach((v) => allColors.add(v.color));
+        }
       });
       setColors([...allColors]);
     } catch (err) {
-      console.error("Lỗi khi tải sản phẩm:", err);
+      console.error("❌ Lỗi khi tải sản phẩm:", err);
       setProducts([]);
     } finally {
       setLoadingAll(false);
@@ -72,7 +102,8 @@ const Home = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [page, minPrice, maxPrice, color, sort]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, minPrice, maxPrice, color, sort, API_URL]);
 
   const updateQuery = (params, labelSetter, labelValue) => {
     const newParams = { page, minPrice, maxPrice, color, sort, ...params };
@@ -152,11 +183,12 @@ const Home = () => {
             <div className="flex justify-center items-center py-20">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
             </div>
-          ) : latestProducts.length === 0 ? (
+          ) : !Array.isArray(latestProducts) || latestProducts.length === 0 ? (
             <div className="text-center text-gray-400 py-10 italic">
               Đang cập nhật sản phẩm mới...
             </div>
           ) : (
+            // ✅ SỬA LỖI: Chỉ render map khi là mảng
             <Motion.motion.div
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10"
               variants={containerVariants}
@@ -174,11 +206,8 @@ const Home = () => {
                   <div className="bg-white rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl border border-transparent group-hover:border-gray-100">
                     <ProductCard product={p} />
 
-                    {/* Overlay Action Buttons (Giả lập hiệu ứng hover thêm) */}
-                    <div className="absolute inset-x-0 bottom-20 px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex justify-center gap-2 pointer-events-none">
-                      {/* Note: pointer-events-none để tránh lỗi click nếu ProductCard chiếm hết chỗ, 
-                          nếu bạn muốn nút bấm được hãy dùng z-index cao hơn và pointer-events-auto */}
-                    </div>
+                    {/* Overlay Action Buttons */}
+                    <div className="absolute inset-x-0 bottom-20 px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex justify-center gap-2 pointer-events-none"></div>
                   </div>
                 </Motion.motion.div>
               ))}
@@ -187,7 +216,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 5. NEW SECTION: PROMO BANNER (Phá vỡ layout nhàm chán) */}
+      {/* 5. NEW SECTION: PROMO BANNER */}
       <section className="py-24 bg-black text-white overflow-hidden relative">
         <div className="absolute inset-0 opacity-30">
           <img
@@ -214,9 +243,8 @@ const Home = () => {
             </p>
             <button
               onClick={() => {
-                document
-                  .getElementById("shop-collection")
-                  .scrollIntoView({ behavior: "smooth" });
+                const el = document.getElementById("shop-collection");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
               }}
               className="bg-white text-black px-10 py-4 rounded-full font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300 shadow-xl"
             >
@@ -226,8 +254,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 4. Section: Shop / Gian Hàng (Nền Xám Nhạt để phân tách) */}
-      <section className="py-16 md:py-24 px-4 bg-gray-50 border-t border-gray-100">
+      {/* 4. Section: Shop / Gian Hàng */}
+      <section
+        id="shop-collection"
+        className="py-16 md:py-24 px-4 bg-gray-50 border-t border-gray-100"
+      >
         <div className="max-w-screen-xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4">
             <div>
@@ -258,7 +289,7 @@ const Home = () => {
             <div className="flex justify-center items-center py-20">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
             </div>
-          ) : products.length === 0 ? (
+          ) : !Array.isArray(products) || products.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
               <p className="text-gray-500 text-lg">
                 Không tìm thấy sản phẩm phù hợp.
@@ -279,6 +310,7 @@ const Home = () => {
               </button>
             </div>
           ) : (
+            // ✅ SỬA LỖI: Chỉ render map khi là mảng
             <Motion.motion.div
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10"
               variants={containerVariants}
