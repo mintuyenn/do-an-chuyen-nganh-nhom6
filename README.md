@@ -1,58 +1,78 @@
-ShopClothes - E-commerce Platform
-ShopClothes là một nền tảng thương mại điện tử full-stack được xây dựng bằng công nghệ MERN (MongoDB, Express, React, Node.js). Hệ thống hỗ trợ đầy đủ các tính năng mua sắm, quản lý giỏ hàng, xác thực người dùng (Local & Google OAuth) và quản lý danh mục sản phẩm đa cấp.
+🛍️ ShopClothes – E-commerce Platform
 
-Công nghệ sử dụng
-Frontend
-Framework: React (Vite)
+ShopClothes là một nền tảng thương mại điện tử full-stack được xây dựng với MERN Stack (MongoDB, Express, React, Node.js).
+Hệ thống hỗ trợ đầy đủ quy trình mua sắm, xác thực người dùng và quản lý sản phẩm theo danh mục đa cấp.
 
-Styling: Tailwind CSS
+🚀 Công nghệ sử dụng
+🎨 Frontend
 
-Routing: React Router DOM
+⚛️ React (Vite)
 
-State Management: Context API (AuthContext, CartContext)
+🎨 Tailwind CSS
 
-Icons: Lucide React
+🧭 React Router DOM
 
-HTTP Client: Fetch API / Axios
+🧠 Context API (AuthContext, CartContext)
 
-Backend
-Runtime: Node.js
+🎯 Lucide React (Icons)
 
-Framework: Express.js
+🌐 Fetch API / Axios
 
-Database: MongoDB (Mongoose)
+🛠️ Backend
 
-Authentication: Passport.js (Google Strategy), JWT (JSON Web Token)
+🟢 Node.js
 
-Security: Bcrypt (hashing passwords), CORS
+🚂 Express.js
 
-Chức năng chính
-Xác thực (Authentication):
+🍃 MongoDB (Mongoose)
 
-Đăng ký / Đăng nhập tài khoản thường.
+🔐 Authentication & Security
 
-Đăng nhập nhanh bằng Google (OAuth2).
+🔑 JWT (JSON Web Token)
 
-Quên mật khẩu / Đặt lại mật khẩu qua OTP.
+🔐 Passport.js (Google OAuth2 Strategy)
 
-JWT Authentication cho các route bảo mật.
+🧂 Bcrypt (Password Hashing)
 
-Sản phẩm & Danh mục:
+🌍 CORS
 
-Hiển thị danh sách sản phẩm, chi tiết sản phẩm.
+✨ Chức năng chính
+🔐 Xác thực người dùng (Authentication)
 
-Danh mục sản phẩm đa cấp (Tree structure).
+📝 Đăng ký / Đăng nhập bằng tài khoản thường
 
-Tìm kiếm sản phẩm theo tên.
+🔵 Đăng nhập nhanh bằng Google OAuth 2.0
 
-Giỏ hàng (Cart):
+🔁 Quên mật khẩu & đặt lại mật khẩu qua OTP
 
-Thêm, sửa, xóa sản phẩm trong giỏ.
+🛡️ JWT Authentication cho các route bảo mật
 
-Đồng bộ giỏ hàng với tài khoản người dùng.
+🏷️ Sản phẩm & Danh mục
 
-Người dùng (User):
+👕 Hiển thị danh sách & chi tiết sản phẩm
 
-Xem và cập nhật thông tin cá nhân (Profile).
+🌳 Danh mục đa cấp (Tree Structure)
 
-Xem lịch sử đơn hàng.
+🔍 Tìm kiếm sản phẩm theo tên
+
+🛒 Giỏ hàng (Cart)
+
+➕➖ Thêm / sửa / xóa sản phẩm trong giỏ
+
+🔄 Đồng bộ giỏ hàng theo tài khoản người dùng
+
+👤 Người dùng (User)
+
+🧾 Xem & cập nhật thông tin cá nhân (Profile)
+
+📦 Xem lịch sử đơn hàng
+
+📌 Điểm nổi bật
+
+✅ Kiến trúc MERN rõ ràng, dễ mở rộng
+
+✅ Áp dụng JWT + OAuth chuẩn thực tế
+
+✅ Danh mục sản phẩm đa cấp
+
+✅ Phù hợp cho Junior / Mid Fullstack CV
