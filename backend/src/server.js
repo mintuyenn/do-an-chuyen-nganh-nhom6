@@ -46,7 +46,7 @@ app.set("trust proxy", 1); // nếu sử dụng proxy/nginx/ngrok
 // --- CẤU HÌNH CORS MỚI (AN TOÀN HƠN) ---
 const allowedOrigins = [
   "http://localhost:5173", // Cho phép chạy ở máy nhà
-  "https://shopclothes-production.up.railway.app", // Cho phép chạy trên Railway Frontend
+  "https://shopclothes-delta.vercel.app",
   process.env.FRONTEND_URL, // Cho phép biến môi trường (nếu có)
 ];
 
