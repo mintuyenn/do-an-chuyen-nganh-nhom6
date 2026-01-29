@@ -22,7 +22,7 @@ const supportLinks = [
 
 const policyLinks = [
   { name: "Tìm kiếm", href: "/" },
-  { name: "Giới thiệu về ShopClothes", href: "/about" },
+  { name: "Giới thiệu về HPTSHOP", href: "/about" },
   { name: "Sản phẩm mới", href: "/products" },
   { name: "Tuyển dụng", href: "#" },
   { name: "Liên hệ", href: "/contact" },
@@ -37,7 +37,7 @@ const Footer = () => {
           {/* CỘT 1: THƯƠNG HIỆU & LIÊN HỆ */}
           <div className="space-y-6">
             <h2 className="text-2xl font-black uppercase tracking-tighter text-white">
-              Shop<span className="text-red-600">Clothes</span>
+              HPT<span className="text-red-600">Shop</span>
             </h2>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
               Thương hiệu thời trang tối giản, chú trọng vào chất liệu bền vững
@@ -54,7 +54,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Mail size={18} className="shrink-0 text-white" />
-                <span>support@shopclothes.vn</span>
+                <span>support@hptshop.vn</span>
               </div>
             </div>
           </div>
@@ -155,7 +155,7 @@ const Footer = () => {
 
         {/* BOTTOM BAR */}
         <div className="border-t border-gray-900 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600">
-          <p>© {new Date().getFullYear()} SHOPCLOTHES. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} HPTSHOP. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-gray-400">
               Privacy Policy

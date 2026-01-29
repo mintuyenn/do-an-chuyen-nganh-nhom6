@@ -192,7 +192,7 @@ const Header = () => {
             to="/"
             className="text-2xl font-extrabold tracking-tighter uppercase shrink-0"
           >
-            Shop<span className="text-red-600">Clothes</span>
+            HPT<span className="text-red-600">Shop</span>
           </Link>
 
           {/* Search Bar (Giữa - Minimalist) */}

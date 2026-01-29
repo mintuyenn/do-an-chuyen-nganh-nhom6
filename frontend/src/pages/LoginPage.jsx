@@ -54,7 +54,7 @@ export default function LoginPage() {
       }, 800);
     } catch (err) {
       setMessage(
-        err.response?.data?.message || "Thông tin đăng nhập không chính xác"
+        err.response?.data?.message || "Thông tin đăng nhập không chính xác",
       );
     } finally {
       setLoading(false);

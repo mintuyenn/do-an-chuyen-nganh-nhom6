@@ -117,7 +117,7 @@ export const updateOrderStatus = async (req, res) => {
         if (!product) continue;
 
         const variantIndex = product.variants.findIndex(
-          (v) => v.color === item.color
+          (v) => v.color === item.color,
         );
         if (variantIndex === -1) continue;
 
@@ -139,7 +139,7 @@ export const updateOrderStatus = async (req, res) => {
         // → trừ theo size đúng
         else {
           const sizeIndex = variant.sizes.findIndex(
-            (s) => s.size === item.size
+            (s) => s.size === item.size,
           );
 
           if (sizeIndex !== -1) {
@@ -357,7 +357,6 @@ export const createDiscount = async (req, res) => {
 
     const discount = new Discount({
       name,
-      code: code || "", // nếu percent có thể để trống
       discountType,
       discountValue,
       priority: priority || 0,
@@ -368,6 +367,11 @@ export const createDiscount = async (req, res) => {
       description: description || "",
       isActive: isActive !== undefined ? isActive : true,
     });
+
+    // CHỈ set code khi cần
+    if (discountType !== "percent") {
+      discount.code = code;
+    }
 
     const newDiscount = await discount.save();
     res.status(201).json({
@@ -422,7 +426,7 @@ export const updateDiscount = async (req, res) => {
       }
       discount.code = code;
     } else {
-      discount.code = code || ""; // percent có thể bỏ trống
+      discount.code = undefined; // ⬅️ QUAN TRỌNG
     }
 
     const updatedDiscount = await discount.save();

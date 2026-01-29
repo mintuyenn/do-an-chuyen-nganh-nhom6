@@ -9,10 +9,8 @@ import {
 import RegisterPage from "../pages/RegisterPage";
 import LoginPage from "../pages/LoginPage";
 import ProfilePage from "../pages/ProfilePage";
-import Header from "../components/Header";
 import PrivateRoute from "../components/PrivateRoute";
 import ForgotPasswordPage from "../pages/ResetPasswordPage";
-import Footer from "../components/Footer";
 import CategoryPage from "../pages/CategoryPage";
 import Home from "../pages/Home";
 import SearchPage from "../pages/SearchPage";

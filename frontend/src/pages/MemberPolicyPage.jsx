@@ -67,7 +67,7 @@ export default function MemberPolicyPage() {
           CHÍNH SÁCH THÀNH VIÊN
         </h1>
         <p className="text-gray-500 text-lg">
-          Đặc quyền dành riêng cho thành viên ShopClothes.
+          Đặc quyền dành riêng cho thành viên HPTShop.
         </p>
       </div>
 

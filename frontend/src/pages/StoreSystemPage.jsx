@@ -7,7 +7,7 @@ export default function StoreSystemPage() {
   const stores = [
     {
       id: 1,
-      name: "ShopClothes Phú Nhuận",
+      name: "HPTSHOP Phú Nhuận",
       address: "112 Hồ Văn Huê, Phường 9, Quận Phú Nhuận, TP.HCM",
       hours: "09:00 - 21:00",
       phone: "0862 347 170",
@@ -17,7 +17,7 @@ export default function StoreSystemPage() {
     },
     {
       id: 2,
-      name: "ShopClothes Tân Bình",
+      name: "HPTSHOP Tân Bình",
       address: "56 Cộng Hòa, Phường 4, Quận Tân Bình, TP.HCM",
       hours: "09:00 - 21:00",
       phone: "0862 347 170",
@@ -30,9 +30,9 @@ export default function StoreSystemPage() {
   const openGoogleMaps = (address) => {
     window.open(
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        address
+        address,
       )}`,
-      "_blank"
+      "_blank",
     );
   };
 

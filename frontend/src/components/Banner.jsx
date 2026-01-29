@@ -40,7 +40,7 @@ const AutoSlider = ({ slides = [], autoInterval = 3000 }) => {
                 ? prev === 0
                   ? slides.length - 1
                   : prev - 1
-                : (prev + 1) % slides.length
+                : (prev + 1) % slides.length,
             )
           }
           className={`absolute top-1/2 ${
@@ -79,25 +79,25 @@ const BannerQuangCao = () => {
   const sliderImages = [
     {
       id: 1,
-      url: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1759326338/myclothes/oxykych2i6rpbftpmuxh.png",
+      url: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1769670677/myclothes/vutnl1rpnmiglbtbenm3.jpg",
     },
     {
       id: 2,
-      url: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1759326336/myclothes/o4xrqtwqyknradkm3djt.png",
+      url: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1769670679/myclothes/bowxnwtsvbfqobumdsk4.jpg",
     },
     {
       id: 3,
-      url: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1759326340/myclothes/iejdoxszyt7onri0tatp.png",
+      url: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1769670681/myclothes/a1ly89yuukrfswdv63vk.jpg",
     },
   ];
 
   const sideImagesRight = [
     {
-      src: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1759326328/myclothes/rwx8jab2cx3giczx55bd.png",
+      src: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1769670682/myclothes/wpds0bgapesrokk6mubv.jpg",
       alt: "banner-right-top",
     },
     {
-      src: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1759326332/myclothes/cpdsgklu1njnph0fd8z6.png",
+      src: "https://res.cloudinary.com/dhbz4atrb/image/upload/v1769670683/myclothes/tiabtvofzsc8foa7ecaa.jpg",
       alt: "banner-right-bottom",
     },
   ];

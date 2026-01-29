@@ -11,7 +11,7 @@ export default function WarrantyPolicyPage() {
             Chính sách bảo hành
           </h1>
           <p className="text-gray-500">
-            Cam kết chất lượng và dịch vụ hậu mãi trọn đời từ ShopClothes.
+            Cam kết chất lượng và dịch vụ hậu mãi trọn đời từ HPTSHOP.
           </p>
         </div>
 
@@ -36,7 +36,7 @@ export default function WarrantyPolicyPage() {
               <div>
                 <strong className="text-gray-900">Địa điểm tiếp nhận:</strong>
                 <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li>Tất cả chi nhánh ShopClothes trên toàn quốc.</li>
+                  <li>Tất cả chi nhánh HPT SHOP trên toàn quốc.</li>
                   <li>
                     Gửi chuyển phát về:{" "}
                     <strong>112 Hồ Văn Huê, Phú Nhuận, TP.HCM</strong> (Hotline:

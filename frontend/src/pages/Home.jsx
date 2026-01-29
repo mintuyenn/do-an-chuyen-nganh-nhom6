@@ -112,7 +112,7 @@ const Home = () => {
         (newParams[key] === "" ||
           newParams[key] === undefined ||
           newParams[key] === 1) &&
-        delete newParams[key]
+        delete newParams[key],
     );
     setSearchParams(newParams);
     if (labelSetter) labelSetter(labelValue);
@@ -164,13 +164,28 @@ const Home = () => {
       {/* 2. Banner */}
       <Banner />
 
+      {/* 1. Marquee - Minimalist Black */}
+      <div className="bg-gray-900 text-white py-2.5 overflow-hidden">
+        <MarqueeText duration={30}>
+          <span className="mx-8 text-xs md:text-sm font-medium tracking-widest uppercase">
+            Hàng mới về mỗi tuần
+          </span>
+          <span className="mx-8 text-xs md:text-sm font-medium tracking-widest uppercase">
+            Tiếp cận xu hướng thời trang mới nhất
+          </span>
+          <span className="mx-8 text-xs md:text-sm font-medium tracking-widest uppercase">
+            Ưu đãi đặc biệt chỉ dành cho thành viên
+          </span>
+        </MarqueeText>
+      </div>
+
       {/* 3. Section: New Arrivals (Nền Trắng) */}
-      <section className="py-16 md:py-24 px-4 bg-white">
+      <section className="py-16 md:py-18 px-4 bg-white">
         <div className="max-w-screen-xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 uppercase tracking-tight mb-3">
-              New Arrivals
+              HÀNG MỚI NHẤT
             </h2>
             <p className="text-gray-500 text-sm md:text-base max-w-xl mx-auto">
               Cập nhật xu hướng thời trang mới nhất. Phong cách tối giản, tinh
@@ -220,7 +235,7 @@ const Home = () => {
       <section className="py-24 bg-black text-white overflow-hidden relative">
         <div className="absolute inset-0 opacity-30">
           <img
-            src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=2574&auto=format&fit=crop"
+            src="https://res.cloudinary.com/dhbz4atrb/image/upload/v1769670683/myclothes/tiabtvofzsc8foa7ecaa.jpg"
             className="w-full h-full object-cover"
             alt="Background"
           />
@@ -263,7 +278,7 @@ const Home = () => {
           <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 uppercase tracking-tight mb-2">
-                Shop Collection
+                Gian hàng sản phẩm
               </h2>
               <p className="text-gray-500 text-sm">
                 Khám phá tất cả sản phẩm ưu đãi.

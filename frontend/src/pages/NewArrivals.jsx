@@ -40,7 +40,7 @@ const NewArrivals = () => {
       <div className="relative w-full h-[400px] md:h-[500px] bg-gray-900 overflow-hidden">
         {/* Background Image */}
         <img
-          src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
+          src="https://res.cloudinary.com/dhbz4atrb/image/upload/v1769670682/myclothes/wpds0bgapesrokk6mubv.jpg"
           alt="New Arrivals Fashion"
           className="absolute inset-0 w-full h-full object-cover opacity-60"
         />
@@ -53,10 +53,6 @@ const NewArrivals = () => {
           <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight drop-shadow-lg">
             Hàng Mới Về
           </h1>
-          <p className="text-gray-200 text-lg md:text-xl max-w-2xl mb-8 font-light">
-            Cập nhật những xu hướng thời trang mới nhất. Phong cách, hiện đại và
-            đẳng cấp.
-          </p>
           <button
             onClick={() => window.scrollTo({ top: 800, behavior: "smooth" })}
             className="bg-white text-gray-900 px-8 py-3 rounded-full font-bold hover:bg-red-600 hover:text-white transition-all duration-300 flex items-center gap-2 shadow-lg"
